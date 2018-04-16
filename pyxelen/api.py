@@ -38,22 +38,17 @@ class Box(PClass):
         return self.size.h
 
 
-class SubImage(PClass):
+class Image(PClass):
     filename = field(type=str, mandatory=True)
     clip = field(type=Box, mandatory=True)
 
 
-class StaticTexture(PClass):
-    unique_name = field(type=str, mandatory=True)
+class Texture(PClass):
+    uid = field(type=int, mandatory=True)
     size = field(type=int, mandatory=True)
 
     def draw(self, renderer):
         pass
-
-
-class Font(PClass):
-    filename = field(type=str, mandatory=True)
-    size = field(type=int, mandatory=True)
 
 
 class Key(enum.IntEnum):

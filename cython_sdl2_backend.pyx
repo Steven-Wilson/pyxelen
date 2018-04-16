@@ -626,20 +626,6 @@ cdef extern from "SDL_mixer.h":
     void Mix_CloseAudio()
 
 
-cdef extern from "SDL_ttf.h":
-
-    ctypedef struct TTF_Font:
-        pass
-
-    int TTF_Init()
-    TTF_Font *TTF_OpenFont(const char *file, int ptsize)
-    SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg)
-    SDL_Surface *TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg)
-    void TTF_CloseFont(TTF_Font *font)
-    void TTF_Quit()
-    int TTF_FontLineSkip(const TTF_Font *font)
-
-
 SDL_BUTTON_TO_API = {
     SDL_BUTTON_LEFT: api.MouseButton.LEFT,
     SDL_BUTTON_MIDDLE: api.MouseButton.MIDDLE,
@@ -1012,14 +998,6 @@ cdef class TextureHandle:
         SDL_DestroyTexture(self.texture)
 
 
-cdef class FontHandle:
-
-    cdef TTF_Font *font
-
-    def __dealloc__(self):
-        TTF_CloseFont(self.font)
-
-
 cdef class MusicHandle:
 
     cdef Mix_Music *music
@@ -1114,13 +1092,6 @@ cdef class Renderer:
             return None, None
 
     @functools.lru_cache()
-    def _load_font(self, font_info):
-        cdef FontHandle handle = FontHandle()
-        cdef TTF_Font *font = TTF_OpenFont(font_info.filename.encode('utf-8'), font_info.size)
-        handle.font = font
-        return handle
-
-    @functools.lru_cache()
     def _load_image(self, filename):
         cdef TextureHandle handle = TextureHandle()
         cdef SDL_Texture *texture = IMG_LoadTexture(self.renderer, filename.encode('utf-8'))
@@ -1143,16 +1114,6 @@ cdef class Renderer:
         SDL_SetRenderTarget(self.renderer, self.back_buffer)
         return handle
 
-    @functools.lru_cache()
-    def _rasterize_text(self, font_info, text):
-        cdef FontHandle font = self._load_font(font_info)
-        cdef TextureHandle handle = TextureHandle()
-        cdef SDL_Surface *surface = TTF_RenderUTF8_Solid(font.font, text.encode('utf-8'), SDL_Color(255, 255, 255, 255))
-        cdef SDL_Texture *texture = SDL_CreateTextureFromSurface(self.renderer, surface)
-        SDL_FreeSurface(surface)
-        handle.texture = texture
-        return handle
-
     def clear_render_cache(self):
         self._load_image.cache_clear()
         self._load_static_texture.cache_clear()
@@ -1162,12 +1123,6 @@ cdef class Renderer:
         cdef SDL_Rect source = SDL_Rect(image.clip.x, image.clip.y, image.clip.w, image.clip.h)
         cdef SDL_Rect dest = SDL_Rect(position.x, position.y, image.clip.w, image.clip.h)
         SDL_RenderCopy(self.renderer, handle.texture, &source, &dest)
-
-    def draw_text(self, font, text, position):
-        cdef TextureHandle handle = self._rasterize_text(font, text)
-        w, h = handle.size
-        cdef SDL_Rect dest = SDL_Rect(position.x, position.y, w, h)
-        SDL_RenderCopy(self.renderer, handle.texture, NULL, &dest)
 
     def draw_static_texture(self, texture, clip, position):
         cdef TextureHandle handle = self._load_static_texture(texture)
@@ -1257,9 +1212,6 @@ def run(title, width, height, model, delay_per_frame):
         raise RuntimeError(GetLastError())
 
     if IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != (IMG_INIT_JPG | IMG_INIT_PNG):
-        raise RuntimeError(GetLastError())
-
-    if TTF_Init() != 0:
         raise RuntimeError(GetLastError())
 
     if Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG:

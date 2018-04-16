@@ -532,10 +532,17 @@ cdef extern from "SDL.h":
     int SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rect *srcrect, const SDL_Rect *dstrect)
     int SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture)
 
-
     # Texture Functions
     SDL_Texture *SDL_CreateTexture(SDL_Renderer *renderer, uint32_t format, int access, int w, int h)
+    SDL_Texture *SDL_CreateTextureFromSurface(SDL_Renderer *renderer, SDL_Surface *surface)
     void SDL_DestroyTexture(SDL_Texture *texture)
+    void SDL_FreeSurface(SDL_Surface *surface)
+    int SDL_QueryTexture(SDL_Texture* texture, uint32_t* format, int* access, int* w, int* h)
+
+
+    # Input state
+    uint32_t SDL_GetMouseState(int *x, int *y)
+    uint16_t SDL_GetModState()
 
 
 cdef extern from "SDL_image.h":
@@ -627,6 +634,7 @@ cdef extern from "SDL_ttf.h":
     int TTF_Init()
     TTF_Font *TTF_OpenFont(const char *file, int ptsize)
     SDL_Surface *TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg)
+    SDL_Surface *TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg)
     void TTF_CloseFont(TTF_Font *font)
     void TTF_Quit()
     int TTF_FontLineSkip(const TTF_Font *font)
@@ -642,247 +650,250 @@ SDL_BUTTON_TO_API = {
 
 
 SDLK_TO_API = {
-    SDLK_UNKNOWN: api.Key.K_UNKNOWN,
-    SDLK_RETURN: api.Key.K_RETURN,
-    SDLK_ESCAPE: api.Key.K_ESCAPE,
-    SDLK_BACKSPACE: api.Key.K_BACKSPACE,
-    SDLK_TAB: api.Key.K_TAB,
-    SDLK_SPACE: api.Key.K_SPACE,
-    SDLK_EXCLAIM: api.Key.K_EXCLAIM,
-    SDLK_QUOTEDBL: api.Key.K_QUOTEDBL,
-    SDLK_HASH: api.Key.K_HASH,
-    SDLK_PERCENT: api.Key.K_PERCENT,
-    SDLK_DOLLAR: api.Key.K_DOLLAR,
-    SDLK_AMPERSAND: api.Key.K_AMPERSAND,
-    SDLK_QUOTE: api.Key.K_QUOTE,
-    SDLK_LEFTPAREN: api.Key.K_LEFTPAREN,
-    SDLK_RIGHTPAREN: api.Key.K_RIGHTPAREN,
-    SDLK_ASTERISK: api.Key.K_ASTERISK,
-    SDLK_PLUS: api.Key.K_PLUS,
-    SDLK_COMMA: api.Key.K_COMMA,
-    SDLK_MINUS: api.Key.K_MINUS,
-    SDLK_PERIOD: api.Key.K_PERIOD,
-    SDLK_SLASH: api.Key.K_SLASH,
-    SDLK_0: api.Key.K_0,
-    SDLK_1: api.Key.K_1,
-    SDLK_2: api.Key.K_2,
-    SDLK_3: api.Key.K_3,
-    SDLK_4: api.Key.K_4,
-    SDLK_5: api.Key.K_5,
-    SDLK_6: api.Key.K_6,
-    SDLK_7: api.Key.K_7,
-    SDLK_8: api.Key.K_8,
-    SDLK_9: api.Key.K_9,
-    SDLK_COLON: api.Key.K_COLON,
-    SDLK_SEMICOLON: api.Key.K_SEMICOLON,
-    SDLK_LESS: api.Key.K_LESS,
-    SDLK_EQUALS: api.Key.K_EQUALS,
-    SDLK_GREATER: api.Key.K_GREATER,
-    SDLK_QUESTION: api.Key.K_QUESTION,
-    SDLK_AT: api.Key.K_AT,
-    SDLK_LEFTBRACKET: api.Key.K_LEFTBRACKET,
-    SDLK_BACKSLASH: api.Key.K_BACKSLASH,
-    SDLK_RIGHTBRACKET: api.Key.K_RIGHTBRACKET,
-    SDLK_CARET: api.Key.K_CARET,
-    SDLK_UNDERSCORE: api.Key.K_UNDERSCORE,
-    SDLK_BACKQUOTE: api.Key.K_BACKQUOTE,
-    SDLK_a: api.Key.K_a,
-    SDLK_b: api.Key.K_b,
-    SDLK_c: api.Key.K_c,
-    SDLK_d: api.Key.K_d,
-    SDLK_e: api.Key.K_e,
-    SDLK_f: api.Key.K_f,
-    SDLK_g: api.Key.K_g,
-    SDLK_h: api.Key.K_h,
-    SDLK_i: api.Key.K_i,
-    SDLK_j: api.Key.K_j,
-    SDLK_k: api.Key.K_k,
-    SDLK_l: api.Key.K_l,
-    SDLK_m: api.Key.K_m,
-    SDLK_n: api.Key.K_n,
-    SDLK_o: api.Key.K_o,
-    SDLK_p: api.Key.K_p,
-    SDLK_q: api.Key.K_q,
-    SDLK_r: api.Key.K_r,
-    SDLK_s: api.Key.K_s,
-    SDLK_t: api.Key.K_t,
-    SDLK_u: api.Key.K_u,
-    SDLK_v: api.Key.K_v,
-    SDLK_w: api.Key.K_w,
-    SDLK_x: api.Key.K_x,
-    SDLK_y: api.Key.K_y,
-    SDLK_z: api.Key.K_z,
-    SDLK_CAPSLOCK: api.Key.K_CAPSLOCK,
-    SDLK_F1: api.Key.K_F1,
-    SDLK_F2: api.Key.K_F2,
-    SDLK_F3: api.Key.K_F3,
-    SDLK_F4: api.Key.K_F4,
-    SDLK_F5: api.Key.K_F5,
-    SDLK_F6: api.Key.K_F6,
-    SDLK_F7: api.Key.K_F7,
-    SDLK_F8: api.Key.K_F8,
-    SDLK_F9: api.Key.K_F9,
-    SDLK_F10: api.Key.K_F10,
-    SDLK_F11: api.Key.K_F11,
-    SDLK_F12: api.Key.K_F12,
-    SDLK_PRINTSCREEN: api.Key.K_PRINTSCREEN,
-    SDLK_SCROLLLOCK: api.Key.K_SCROLLLOCK,
-    SDLK_PAUSE: api.Key.K_PAUSE,
-    SDLK_INSERT: api.Key.K_INSERT,
-    SDLK_HOME: api.Key.K_HOME,
-    SDLK_PAGEUP: api.Key.K_PAGEUP,
-    SDLK_DELETE: api.Key.K_DELETE,
-    SDLK_END: api.Key.K_END,
-    SDLK_PAGEDOWN: api.Key.K_PAGEDOWN,
-    SDLK_RIGHT: api.Key.K_RIGHT,
-    SDLK_LEFT: api.Key.K_LEFT,
-    SDLK_DOWN: api.Key.K_DOWN,
-    SDLK_UP: api.Key.K_UP,
-    SDLK_NUMLOCKCLEAR: api.Key.K_NUMLOCKCLEAR,
-    SDLK_KP_DIVIDE: api.Key.K_KP_DIVIDE,
-    SDLK_KP_MULTIPLY: api.Key.K_KP_MULTIPLY,
-    SDLK_KP_MINUS: api.Key.K_KP_MINUS,
-    SDLK_KP_PLUS: api.Key.K_KP_PLUS,
-    SDLK_KP_ENTER: api.Key.K_KP_ENTER,
-    SDLK_KP_1: api.Key.K_KP_1,
-    SDLK_KP_2: api.Key.K_KP_2,
-    SDLK_KP_3: api.Key.K_KP_3,
-    SDLK_KP_4: api.Key.K_KP_4,
-    SDLK_KP_5: api.Key.K_KP_5,
-    SDLK_KP_6: api.Key.K_KP_6,
-    SDLK_KP_7: api.Key.K_KP_7,
-    SDLK_KP_8: api.Key.K_KP_8,
-    SDLK_KP_9: api.Key.K_KP_9,
-    SDLK_KP_0: api.Key.K_KP_0,
-    SDLK_KP_PERIOD: api.Key.K_KP_PERIOD,
-    SDLK_APPLICATION: api.Key.K_APPLICATION,
-    SDLK_POWER: api.Key.K_POWER,
-    SDLK_KP_EQUALS: api.Key.K_KP_EQUALS,
-    SDLK_F13: api.Key.K_F13,
-    SDLK_F14: api.Key.K_F14,
-    SDLK_F15: api.Key.K_F15,
-    SDLK_F16: api.Key.K_F16,
-    SDLK_F17: api.Key.K_F17,
-    SDLK_F18: api.Key.K_F18,
-    SDLK_F19: api.Key.K_F19,
-    SDLK_F20: api.Key.K_F20,
-    SDLK_F21: api.Key.K_F21,
-    SDLK_F22: api.Key.K_F22,
-    SDLK_F23: api.Key.K_F23,
-    SDLK_F24: api.Key.K_F24,
-    SDLK_EXECUTE: api.Key.K_EXECUTE,
-    SDLK_HELP: api.Key.K_HELP,
-    SDLK_MENU: api.Key.K_MENU,
-    SDLK_SELECT: api.Key.K_SELECT,
-    SDLK_STOP: api.Key.K_STOP,
-    SDLK_AGAIN: api.Key.K_AGAIN,
-    SDLK_UNDO: api.Key.K_UNDO,
-    SDLK_CUT: api.Key.K_CUT,
-    SDLK_COPY: api.Key.K_COPY,
-    SDLK_PASTE: api.Key.K_PASTE,
-    SDLK_FIND: api.Key.K_FIND,
-    SDLK_MUTE: api.Key.K_MUTE,
-    SDLK_VOLUMEUP: api.Key.K_VOLUMEUP,
-    SDLK_VOLUMEDOWN: api.Key.K_VOLUMEDOWN,
-    SDLK_KP_COMMA: api.Key.K_KP_COMMA,
-    SDLK_KP_EQUALSAS400: api.Key.K_KP_EQUALSAS400,
-    SDLK_ALTERASE: api.Key.K_ALTERASE,
-    SDLK_SYSREQ: api.Key.K_SYSREQ,
-    SDLK_CANCEL: api.Key.K_CANCEL,
-    SDLK_CLEAR: api.Key.K_CLEAR,
-    SDLK_PRIOR: api.Key.K_PRIOR,
-    SDLK_RETURN2: api.Key.K_RETURN2,
-    SDLK_SEPARATOR: api.Key.K_SEPARATOR,
-    SDLK_OUT: api.Key.K_OUT,
-    SDLK_OPER: api.Key.K_OPER,
-    SDLK_CLEARAGAIN: api.Key.K_CLEARAGAIN,
-    SDLK_CRSEL: api.Key.K_CRSEL,
-    SDLK_EXSEL: api.Key.K_EXSEL,
-    SDLK_KP_00: api.Key.K_KP_00,
-    SDLK_KP_000: api.Key.K_KP_000,
-    SDLK_THOUSANDSSEPARATOR: api.Key.K_THOUSANDSSEPARATOR,
-    SDLK_DECIMALSEPARATOR: api.Key.K_DECIMALSEPARATOR,
-    SDLK_CURRENCYUNIT: api.Key.K_CURRENCYUNIT,
-    SDLK_CURRENCYSUBUNIT: api.Key.K_CURRENCYSUBUNIT,
-    SDLK_KP_LEFTPAREN: api.Key.K_KP_LEFTPAREN,
-    SDLK_KP_RIGHTPAREN: api.Key.K_KP_RIGHTPAREN,
-    SDLK_KP_LEFTBRACE: api.Key.K_KP_LEFTBRACE,
-    SDLK_KP_RIGHTBRACE: api.Key.K_KP_RIGHTBRACE,
-    SDLK_KP_TAB: api.Key.K_KP_TAB,
-    SDLK_KP_BACKSPACE: api.Key.K_KP_BACKSPACE,
-    SDLK_KP_A: api.Key.K_KP_A,
-    SDLK_KP_B: api.Key.K_KP_B,
-    SDLK_KP_C: api.Key.K_KP_C,
-    SDLK_KP_D: api.Key.K_KP_D,
-    SDLK_KP_E: api.Key.K_KP_E,
-    SDLK_KP_F: api.Key.K_KP_F,
-    SDLK_KP_XOR: api.Key.K_KP_XOR,
-    SDLK_KP_POWER: api.Key.K_KP_POWER,
-    SDLK_KP_PERCENT: api.Key.K_KP_PERCENT,
-    SDLK_KP_LESS: api.Key.K_KP_LESS,
-    SDLK_KP_GREATER: api.Key.K_KP_GREATER,
-    SDLK_KP_AMPERSAND: api.Key.K_KP_AMPERSAND,
-    SDLK_KP_DBLAMPERSAND: api.Key.K_KP_DBLAMPERSAND,
-    SDLK_KP_VERTICALBAR: api.Key.K_KP_VERTICALBAR,
-    SDLK_KP_DBLVERTICALBAR: api.Key.K_KP_DBLVERTICALBAR,
-    SDLK_KP_COLON: api.Key.K_KP_COLON,
-    SDLK_KP_HASH: api.Key.K_KP_HASH,
-    SDLK_KP_SPACE: api.Key.K_KP_SPACE,
-    SDLK_KP_AT: api.Key.K_KP_AT,
-    SDLK_KP_EXCLAM: api.Key.K_KP_EXCLAM,
-    SDLK_KP_MEMSTORE: api.Key.K_KP_MEMSTORE,
-    SDLK_KP_MEMRECALL: api.Key.K_KP_MEMRECALL,
-    SDLK_KP_MEMCLEAR: api.Key.K_KP_MEMCLEAR,
-    SDLK_KP_MEMADD: api.Key.K_KP_MEMADD,
-    SDLK_KP_MEMSUBTRACT: api.Key.K_KP_MEMSUBTRACT,
-    SDLK_KP_MEMMULTIPLY: api.Key.K_KP_MEMMULTIPLY,
-    SDLK_KP_MEMDIVIDE: api.Key.K_KP_MEMDIVIDE,
-    SDLK_KP_PLUSMINUS: api.Key.K_KP_PLUSMINUS,
-    SDLK_KP_CLEAR: api.Key.K_KP_CLEAR,
-    SDLK_KP_CLEARENTRY: api.Key.K_KP_CLEARENTRY,
-    SDLK_KP_BINARY: api.Key.K_KP_BINARY,
-    SDLK_KP_OCTAL: api.Key.K_KP_OCTAL,
-    SDLK_KP_DECIMAL: api.Key.K_KP_DECIMAL,
-    SDLK_KP_HEXADECIMAL: api.Key.K_KP_HEXADECIMAL,
-    SDLK_LCTRL: api.Key.K_LCTRL,
-    SDLK_LSHIFT: api.Key.K_LSHIFT,
-    SDLK_LALT: api.Key.K_LALT,
-    SDLK_LGUI: api.Key.K_LGUI,
-    SDLK_RCTRL: api.Key.K_RCTRL,
-    SDLK_RSHIFT: api.Key.K_RSHIFT,
-    SDLK_RALT: api.Key.K_RALT,
-    SDLK_RGUI: api.Key.K_RGUI,
-    SDLK_MODE: api.Key.K_MODE,
-    SDLK_AUDIONEXT: api.Key.K_AUDIONEXT,
-    SDLK_AUDIOPREV: api.Key.K_AUDIOPREV,
-    SDLK_AUDIOSTOP: api.Key.K_AUDIOSTOP,
-    SDLK_AUDIOPLAY: api.Key.K_AUDIOPLAY,
-    SDLK_AUDIOMUTE: api.Key.K_AUDIOMUTE,
-    SDLK_MEDIASELECT: api.Key.K_MEDIASELECT,
-    SDLK_WWW: api.Key.K_WWW,
-    SDLK_MAIL: api.Key.K_MAIL,
-    SDLK_CALCULATOR: api.Key.K_CALCULATOR,
-    SDLK_COMPUTER: api.Key.K_COMPUTER,
-    SDLK_AC_SEARCH: api.Key.K_AC_SEARCH,
-    SDLK_AC_HOME: api.Key.K_AC_HOME,
-    SDLK_AC_BACK: api.Key.K_AC_BACK,
-    SDLK_AC_FORWARD: api.Key.K_AC_FORWARD,
-    SDLK_AC_STOP: api.Key.K_AC_STOP,
-    SDLK_AC_REFRESH: api.Key.K_AC_REFRESH,
-    SDLK_AC_BOOKMARKS: api.Key.K_AC_BOOKMARKS,
-    SDLK_BRIGHTNESSDOWN: api.Key.K_BRIGHTNESSDOWN,
-    SDLK_BRIGHTNESSUP: api.Key.K_BRIGHTNESSUP,
-    SDLK_DISPLAYSWITCH: api.Key.K_DISPLAYSWITCH,
-    SDLK_KBDILLUMTOGGLE: api.Key.K_KBDILLUMTOGGLE,
-    SDLK_KBDILLUMDOWN: api.Key.K_KBDILLUMDOWN,
-    SDLK_KBDILLUMUP: api.Key.K_KBDILLUMUP,
-    SDLK_EJECT: api.Key.K_EJECT,
-    SDLK_SLEEP: api.Key.K_SLEEP,
-    SDLK_APP1: api.Key.K_APP1,
-    SDLK_APP2: api.Key.K_APP2,
-    SDLK_AUDIOREWIND: api.Key.K_AUDIOREWIND,
-    SDLK_AUDIOFASTFORWARD: api.Key.K_AUDIOFASTFORWARD,
+    SDLK_UNKNOWN: api.Key.UNKNOWN,
+    SDLK_RETURN: api.Key.RETURN,
+    SDLK_ESCAPE: api.Key.ESCAPE,
+    SDLK_BACKSPACE: api.Key.BACKSPACE,
+    SDLK_TAB: api.Key.TAB,
+    SDLK_SPACE: api.Key.SPACE,
+    SDLK_EXCLAIM: api.Key.EXCLAIM,
+    SDLK_QUOTEDBL: api.Key.QUOTEDBL,
+    SDLK_HASH: api.Key.HASH,
+    SDLK_PERCENT: api.Key.PERCENT,
+    SDLK_DOLLAR: api.Key.DOLLAR,
+    SDLK_AMPERSAND: api.Key.AMPERSAND,
+    SDLK_QUOTE: api.Key.QUOTE,
+    SDLK_LEFTPAREN: api.Key.LEFTPAREN,
+    SDLK_RIGHTPAREN: api.Key.RIGHTPAREN,
+    SDLK_ASTERISK: api.Key.ASTERISK,
+    SDLK_PLUS: api.Key.PLUS,
+    SDLK_COMMA: api.Key.COMMA,
+    SDLK_MINUS: api.Key.MINUS,
+    SDLK_PERIOD: api.Key.PERIOD,
+    SDLK_SLASH: api.Key.SLASH,
+    SDLK_0: api.Key.K0,
+    SDLK_1: api.Key.K1,
+    SDLK_2: api.Key.K2,
+    SDLK_3: api.Key.K3,
+    SDLK_4: api.Key.K4,
+    SDLK_5: api.Key.K5,
+    SDLK_6: api.Key.K6,
+    SDLK_7: api.Key.K7,
+    SDLK_8: api.Key.K8,
+    SDLK_9: api.Key.K9,
+    SDLK_COLON: api.Key.COLON,
+    SDLK_SEMICOLON: api.Key.SEMICOLON,
+    SDLK_LESS: api.Key.LESS,
+    SDLK_EQUALS: api.Key.EQUALS,
+    SDLK_GREATER: api.Key.GREATER,
+    SDLK_QUESTION: api.Key.QUESTION,
+    SDLK_AT: api.Key.AT,
+    SDLK_LEFTBRACKET: api.Key.LEFTBRACKET,
+    SDLK_BACKSLASH: api.Key.BACKSLASH,
+    SDLK_RIGHTBRACKET: api.Key.RIGHTBRACKET,
+    SDLK_CARET: api.Key.CARET,
+    SDLK_UNDERSCORE: api.Key.UNDERSCORE,
+    SDLK_BACKQUOTE: api.Key.BACKQUOTE,
+    SDLK_a: api.Key.A,
+    SDLK_b: api.Key.B,
+    SDLK_c: api.Key.C,
+    SDLK_d: api.Key.D,
+    SDLK_e: api.Key.E,
+    SDLK_f: api.Key.F,
+    SDLK_g: api.Key.G,
+    SDLK_h: api.Key.H,
+    SDLK_i: api.Key.I,
+    SDLK_j: api.Key.J,
+    SDLK_k: api.Key.K,
+    SDLK_l: api.Key.L,
+    SDLK_m: api.Key.M,
+    SDLK_n: api.Key.N,
+    SDLK_o: api.Key.O,
+    SDLK_p: api.Key.P,
+    SDLK_q: api.Key.Q,
+    SDLK_r: api.Key.R,
+    SDLK_s: api.Key.S,
+    SDLK_t: api.Key.T,
+    SDLK_u: api.Key.U,
+    SDLK_v: api.Key.V,
+    SDLK_w: api.Key.W,
+    SDLK_x: api.Key.X,
+    SDLK_y: api.Key.Y,
+    SDLK_z: api.Key.Z,
+    SDLK_CAPSLOCK: api.Key.CAPSLOCK,
+    SDLK_F1: api.Key.F1,
+    SDLK_F2: api.Key.F2,
+    SDLK_F3: api.Key.F3,
+    SDLK_F4: api.Key.F4,
+    SDLK_F5: api.Key.F5,
+    SDLK_F6: api.Key.F6,
+    SDLK_F7: api.Key.F7,
+    SDLK_F8: api.Key.F8,
+    SDLK_F9: api.Key.F9,
+    SDLK_F10: api.Key.F10,
+    SDLK_F11: api.Key.F11,
+    SDLK_F12: api.Key.F12,
+    SDLK_PRINTSCREEN: api.Key.PRINTSCREEN,
+    SDLK_SCROLLLOCK: api.Key.SCROLLLOCK,
+    SDLK_PAUSE: api.Key.PAUSE,
+    SDLK_INSERT: api.Key.INSERT,
+    SDLK_HOME: api.Key.HOME,
+    SDLK_PAGEUP: api.Key.PAGEUP,
+    SDLK_DELETE: api.Key.DELETE,
+    SDLK_END: api.Key.END,
+    SDLK_PAGEDOWN: api.Key.PAGEDOWN,
+    SDLK_RIGHT: api.Key.RIGHT,
+    SDLK_LEFT: api.Key.LEFT,
+    SDLK_DOWN: api.Key.DOWN,
+    SDLK_UP: api.Key.UP,
+    SDLK_NUMLOCKCLEAR: api.Key.NUMLOCKCLEAR,
+    SDLK_KP_DIVIDE: api.Key.KP_DIVIDE,
+    SDLK_KP_MULTIPLY: api.Key.KP_MULTIPLY,
+    SDLK_KP_MINUS: api.Key.KP_MINUS,
+    SDLK_KP_PLUS: api.Key.KP_PLUS,
+    SDLK_KP_ENTER: api.Key.KP_ENTER,
+    SDLK_KP_1: api.Key.KP_1,
+    SDLK_KP_2: api.Key.KP_2,
+    SDLK_KP_3: api.Key.KP_3,
+    SDLK_KP_4: api.Key.KP_4,
+    SDLK_KP_5: api.Key.KP_5,
+    SDLK_KP_6: api.Key.KP_6,
+    SDLK_KP_7: api.Key.KP_7,
+    SDLK_KP_8: api.Key.KP_8,
+    SDLK_KP_9: api.Key.KP_9,
+    SDLK_KP_0: api.Key.KP_0,
+    SDLK_KP_PERIOD: api.Key.KP_PERIOD,
+    SDLK_APPLICATION: api.Key.APPLICATION,
+    SDLK_POWER: api.Key.POWER,
+    SDLK_KP_EQUALS: api.Key.KP_EQUALS,
+    SDLK_F13: api.Key.F13,
+    SDLK_F14: api.Key.F14,
+    SDLK_F15: api.Key.F15,
+    SDLK_F16: api.Key.F16,
+    SDLK_F17: api.Key.F17,
+    SDLK_F18: api.Key.F18,
+    SDLK_F19: api.Key.F19,
+    SDLK_F20: api.Key.F20,
+    SDLK_F21: api.Key.F21,
+    SDLK_F22: api.Key.F22,
+    SDLK_F23: api.Key.F23,
+    SDLK_F24: api.Key.F24,
+    SDLK_EXECUTE: api.Key.EXECUTE,
+    SDLK_HELP: api.Key.HELP,
+    SDLK_MENU: api.Key.MENU,
+    SDLK_SELECT: api.Key.SELECT,
+    SDLK_STOP: api.Key.STOP,
+    SDLK_AGAIN: api.Key.AGAIN,
+    SDLK_UNDO: api.Key.UNDO,
+    SDLK_CUT: api.Key.CUT,
+    SDLK_COPY: api.Key.COPY,
+    SDLK_PASTE: api.Key.PASTE,
+    SDLK_FIND: api.Key.FIND,
+    SDLK_MUTE: api.Key.MUTE,
+    SDLK_VOLUMEUP: api.Key.VOLUMEUP,
+    SDLK_VOLUMEDOWN: api.Key.VOLUMEDOWN,
+    SDLK_KP_COMMA: api.Key.KP_COMMA,
+    SDLK_KP_EQUALSAS400: api.Key.KP_EQUALSAS400,
+    SDLK_ALTERASE: api.Key.ALTERASE,
+    SDLK_SYSREQ: api.Key.SYSREQ,
+    SDLK_CANCEL: api.Key.CANCEL,
+    SDLK_CLEAR: api.Key.CLEAR,
+    SDLK_PRIOR: api.Key.PRIOR,
+    SDLK_RETURN2: api.Key.RETURN2,
+    SDLK_SEPARATOR: api.Key.SEPARATOR,
+    SDLK_OUT: api.Key.OUT,
+    SDLK_OPER: api.Key.OPER,
+    SDLK_CLEARAGAIN: api.Key.CLEARAGAIN,
+    SDLK_CRSEL: api.Key.CRSEL,
+    SDLK_EXSEL: api.Key.EXSEL,
+    SDLK_KP_00: api.Key.KP_00,
+    SDLK_KP_000: api.Key.KP_000,
+    SDLK_THOUSANDSSEPARATOR: api.Key.THOUSANDSSEPARATOR,
+    SDLK_DECIMALSEPARATOR: api.Key.DECIMALSEPARATOR,
+    SDLK_CURRENCYUNIT: api.Key.CURRENCYUNIT,
+    SDLK_CURRENCYSUBUNIT: api.Key.CURRENCYSUBUNIT,
+    SDLK_KP_LEFTPAREN: api.Key.KP_LEFTPAREN,
+    SDLK_KP_RIGHTPAREN: api.Key.KP_RIGHTPAREN,
+    SDLK_KP_LEFTBRACE: api.Key.KP_LEFTBRACE,
+    SDLK_KP_RIGHTBRACE: api.Key.KP_RIGHTBRACE,
+    SDLK_KP_TAB: api.Key.KP_TAB,
+    SDLK_KP_BACKSPACE: api.Key.KP_BACKSPACE,
+    SDLK_KP_A: api.Key.KP_A,
+    SDLK_KP_B: api.Key.KP_B,
+    SDLK_KP_C: api.Key.KP_C,
+    SDLK_KP_D: api.Key.KP_D,
+    SDLK_KP_E: api.Key.KP_E,
+    SDLK_KP_F: api.Key.KP_F,
+    SDLK_KP_XOR: api.Key.KP_XOR,
+    SDLK_KP_POWER: api.Key.KP_POWER,
+    SDLK_KP_PERCENT: api.Key.KP_PERCENT,
+    SDLK_KP_LESS: api.Key.KP_LESS,
+    SDLK_KP_GREATER: api.Key.KP_GREATER,
+    SDLK_KP_AMPERSAND: api.Key.KP_AMPERSAND,
+    SDLK_KP_DBLAMPERSAND: api.Key.KP_DBLAMPERSAND,
+    SDLK_KP_VERTICALBAR: api.Key.KP_VERTICALBAR,
+    SDLK_KP_DBLVERTICALBAR: api.Key.KP_DBLVERTICALBAR,
+    SDLK_KP_COLON: api.Key.KP_COLON,
+    SDLK_KP_HASH: api.Key.KP_HASH,
+    SDLK_KP_SPACE: api.Key.KP_SPACE,
+    SDLK_KP_AT: api.Key.KP_AT,
+    SDLK_KP_EXCLAM: api.Key.KP_EXCLAM,
+    SDLK_KP_MEMSTORE: api.Key.KP_MEMSTORE,
+    SDLK_KP_MEMRECALL: api.Key.KP_MEMRECALL,
+    SDLK_KP_MEMCLEAR: api.Key.KP_MEMCLEAR,
+    SDLK_KP_MEMADD: api.Key.KP_MEMADD,
+    SDLK_KP_MEMSUBTRACT: api.Key.KP_MEMSUBTRACT,
+    SDLK_KP_MEMMULTIPLY: api.Key.KP_MEMMULTIPLY,
+    SDLK_KP_MEMDIVIDE: api.Key.KP_MEMDIVIDE,
+    SDLK_KP_PLUSMINUS: api.Key.KP_PLUSMINUS,
+    SDLK_KP_CLEAR: api.Key.KP_CLEAR,
+    SDLK_KP_CLEARENTRY: api.Key.KP_CLEARENTRY,
+    SDLK_KP_BINARY: api.Key.KP_BINARY,
+    SDLK_KP_OCTAL: api.Key.KP_OCTAL,
+    SDLK_KP_DECIMAL: api.Key.KP_DECIMAL,
+    SDLK_KP_HEXADECIMAL: api.Key.KP_HEXADECIMAL,
+    SDLK_LCTRL: api.Key.LCTRL,
+    SDLK_LSHIFT: api.Key.LSHIFT,
+    SDLK_LALT: api.Key.LALT,
+    SDLK_LGUI: api.Key.LGUI,
+    SDLK_RCTRL: api.Key.RCTRL,
+    SDLK_RSHIFT: api.Key.RSHIFT,
+    SDLK_RALT: api.Key.RALT,
+    SDLK_RGUI: api.Key.RGUI,
+    SDLK_MODE: api.Key.MODE,
+    SDLK_AUDIONEXT: api.Key.AUDIONEXT,
+    SDLK_AUDIOPREV: api.Key.AUDIOPREV,
+    SDLK_AUDIOSTOP: api.Key.AUDIOSTOP,
+    SDLK_AUDIOPLAY: api.Key.AUDIOPLAY,
+    SDLK_AUDIOMUTE: api.Key.AUDIOMUTE,
+    SDLK_MEDIASELECT: api.Key.MEDIASELECT,
+    SDLK_WWW: api.Key.WWW,
+    SDLK_MAIL: api.Key.MAIL,
+    SDLK_CALCULATOR: api.Key.CALCULATOR,
+    SDLK_COMPUTER: api.Key.COMPUTER,
+    SDLK_AC_SEARCH: api.Key.AC_SEARCH,
+    SDLK_AC_HOME: api.Key.AC_HOME,
+    SDLK_AC_BACK: api.Key.AC_BACK,
+    SDLK_AC_FORWARD: api.Key.AC_FORWARD,
+    SDLK_AC_STOP: api.Key.AC_STOP,
+    SDLK_AC_REFRESH: api.Key.AC_REFRESH,
+    SDLK_AC_BOOKMARKS: api.Key.AC_BOOKMARKS,
+    SDLK_BRIGHTNESSDOWN: api.Key.BRIGHTNESSDOWN,
+    SDLK_BRIGHTNESSUP: api.Key.BRIGHTNESSUP,
+    SDLK_DISPLAYSWITCH: api.Key.DISPLAYSWITCH,
+    SDLK_KBDILLUMTOGGLE: api.Key.KBDILLUMTOGGLE,
+    SDLK_KBDILLUMDOWN: api.Key.KBDILLUMDOWN,
+    SDLK_KBDILLUMUP: api.Key.KBDILLUMUP,
+    SDLK_EJECT: api.Key.EJECT,
+    SDLK_SLEEP: api.Key.SLEEP,
+    SDLK_APP1: api.Key.APP1,
+    SDLK_APP2: api.Key.APP2,
+    SDLK_AUDIOREWIND: api.Key.AUDIOREWIND,
+    SDLK_AUDIOFASTFORWARD: api.Key.AUDIOFASTFORWARD,
 }
+
+
+API_TO_SDLK = {v: k for k, v in SDLK_TO_API.items()}
 
 
 HAT_TO_DIRECTION = {
@@ -904,6 +915,9 @@ SDL_CONTROLLER_BUTTON_TO_API = {
     SDL_CONTROLLER_BUTTON_LEFTSHOULDER: api.ControllerButton.LEFT_SHOULDER,
     SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: api.ControllerButton.RIGHT_SHOULDER,
 }
+
+
+PRESSED_KEYS = set()
 
 
 def GetLastError():
@@ -928,6 +942,22 @@ cdef to_key_modifiers(uint16_t mod):
         shift=((KMOD_SHIFT & mod) > 0),
         alt=((KMOD_ALT & mod) > 0)
     )
+
+
+cdef get_current_mouse_state():
+    cdef int x = 0
+    cdef int y = 0
+    cdef uint32_t state = SDL_GetMouseState(&x, &y)
+    return to_mouse(state, x, y)
+
+
+cdef get_current_mod_state():
+    cdef uint16_t mod = SDL_GetModState()
+    return to_key_modifiers(mod)
+
+
+# cdef get_current_keyboard_state():
+#     cdef uint8_t * state
 
 
 class Controllers:
@@ -965,8 +995,29 @@ cdef class TextureHandle:
 
     cdef SDL_Texture *texture
 
+    property size:
+
+        def __get__(self):
+            cdef uint32_t pixel_format;
+            cdef int texture_access;
+            cdef int w;
+            cdef int h;
+            cdef int rc = SDL_QueryTexture(
+                self.texture, &pixel_format,
+                &texture_access, &w, &h
+            )
+            return w, h
+
     def __dealloc__(self):
         SDL_DestroyTexture(self.texture)
+
+
+cdef class FontHandle:
+
+    cdef TTF_Font *font
+
+    def __dealloc__(self):
+        TTF_CloseFont(self.font)
 
 
 cdef class MusicHandle:
@@ -1063,6 +1114,13 @@ cdef class Renderer:
             return None, None
 
     @functools.lru_cache()
+    def _load_font(self, font_info):
+        cdef FontHandle handle = FontHandle()
+        cdef TTF_Font *font = TTF_OpenFont(font_info.filename.encode('utf-8'), font_info.size)
+        handle.font = font
+        return handle
+
+    @functools.lru_cache()
     def _load_image(self, filename):
         cdef TextureHandle handle = TextureHandle()
         cdef SDL_Texture *texture = IMG_LoadTexture(self.renderer, filename.encode('utf-8'))
@@ -1085,6 +1143,16 @@ cdef class Renderer:
         SDL_SetRenderTarget(self.renderer, self.back_buffer)
         return handle
 
+    @functools.lru_cache()
+    def _rasterize_text(self, font_info, text):
+        cdef FontHandle font = self._load_font(font_info)
+        cdef TextureHandle handle = TextureHandle()
+        cdef SDL_Surface *surface = TTF_RenderUTF8_Solid(font.font, text.encode('utf-8'), SDL_Color(255, 255, 255, 255))
+        cdef SDL_Texture *texture = SDL_CreateTextureFromSurface(self.renderer, surface)
+        SDL_FreeSurface(surface)
+        handle.texture = texture
+        return handle
+
     def clear_render_cache(self):
         self._load_image.cache_clear()
         self._load_static_texture.cache_clear()
@@ -1094,6 +1162,12 @@ cdef class Renderer:
         cdef SDL_Rect source = SDL_Rect(image.clip.x, image.clip.y, image.clip.w, image.clip.h)
         cdef SDL_Rect dest = SDL_Rect(position.x, position.y, image.clip.w, image.clip.h)
         SDL_RenderCopy(self.renderer, handle.texture, &source, &dest)
+
+    def draw_text(self, font, text, position):
+        cdef TextureHandle handle = self._rasterize_text(font, text)
+        w, h = handle.size
+        cdef SDL_Rect dest = SDL_Rect(position.x, position.y, w, h)
+        SDL_RenderCopy(self.renderer, handle.texture, NULL, &dest)
 
     def draw_static_texture(self, texture, clip, position):
         cdef TextureHandle handle = self._load_static_texture(texture)
@@ -1248,15 +1322,17 @@ def run(title, width, height, model, delay_per_frame):
 
             elif event.type == SDL_KEYDOWN:
                 if event.key.repeat == 0:
+                    key = SDLK_TO_API.get(event.key.keysym.sym, api.Key.UNKNOWN)
+                    PRESSED_KEYS.add(key)
                     model = model.on_key_down(
-                        SDLK_TO_API.get(event.key.keysym.sym, 'UNKNOWN'),
-                        to_key_modifiers(event.key.keysym.mod)
+                        key, to_key_modifiers(event.key.keysym.mod)
                     )
 
             elif event.type == SDL_KEYUP:
+                key = SDLK_TO_API.get(event.key.keysym.sym, api.Key.UNKNOWN)
+                PRESSED_KEYS.remove(key)
                 model = model.on_key_up(
-                    SDLK_TO_API.get(event.key.keysym.sym, 'UNKNOWN'),
-                    to_key_modifiers(event.key.keysym.mod)
+                    key, to_key_modifiers(event.key.keysym.mod)
                 )
 
             elif event.type == SDL_MOUSEBUTTONDOWN:
@@ -1265,7 +1341,7 @@ def run(title, width, height, model, delay_per_frame):
                 )
                 if x is not None:
                     model = model.on_mouse_button_down(
-                        SDL_BUTTON_TO_API.get(event.button.button, 'UNKNOWN'),
+                        SDL_BUTTON_TO_API.get(event.button.button, api.MouseButton.UNKNOWN),
                         api.Position(x=x, y=y)
                     )
 
@@ -1275,7 +1351,7 @@ def run(title, width, height, model, delay_per_frame):
                 )
                 if x is not None:
                     model = model.on_mouse_button_up(
-                        SDL_BUTTON_TO_API.get(event.button.button, 'UNKNOWN'),
+                        SDL_BUTTON_TO_API.get(event.button.button, api.MouseButton.UNKNOWN),
                         api.Position(x=x, y=y)
                     )
 
@@ -1366,7 +1442,12 @@ def run(title, width, height, model, delay_per_frame):
         if model.should_close:
             break
 
-        controls = None
+        controls = api.Controls(
+            mouse=get_current_mouse_state(),
+            key_mods=get_current_mod_state(),
+            controllers=[],
+            keyboard=PRESSED_KEYS
+        )
 
         model = model.on_update(controls)
         model = audio.process(model)

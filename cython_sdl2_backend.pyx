@@ -1170,7 +1170,7 @@ class Audio:
             Mix_PlayMusic(handle.music, -1)
 
     def stop_music(self):
-        self.music_playing == ""
+        self.music_playing = ""
         if Mix_PlayingMusic() != 0:
             Mix_HaltMusic()
 
@@ -1195,6 +1195,8 @@ class Audio:
     def process(self, model):
         if model.music != "":
             self.play_music(model.music)
+        else:
+            self.stop_music()
 
         for effect in model.sound_effects:
             self.play_effect(effect)

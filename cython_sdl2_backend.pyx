@@ -615,7 +615,7 @@ cdef extern from "SDL_mixer.h":
     void Mix_FreeMusic(Mix_Music *music)
     int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks)
     int Mix_PlayMusic(Mix_Music *music, int loops)
-    int Mix_Volume(int channel, int volume)
+    int Mix_VolumeChunk(Mix_Chunk *chunk, int volume)
     int Mix_VolumeMusic(int volume)
     int Mix_HaltMusic()
     void Mix_PauseMusic()
@@ -1158,6 +1158,8 @@ cdef class Renderer:
 
 class Audio:
 
+    RAMP = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 128]
+
     def __init__(self):
         self.music_playing = ""
 
@@ -1174,8 +1176,9 @@ class Audio:
         if Mix_PlayingMusic() != 0:
             Mix_HaltMusic()
 
-    def play_effect(self, filename):
+    def play_effect(self, model, filename):
         cdef ChunkHandle handle = self._load_chunk(filename)
+        Mix_VolumeChunk(handle.chunk, self.RAMP[model.system_options.effects_volume])
         Mix_PlayChannelTimed(-1, handle.chunk, 0, -1)
 
     @functools.lru_cache()
@@ -1193,15 +1196,16 @@ class Audio:
         return handle
 
     def process(self, model):
-        if model.music != "":
-            self.play_music(model.music)
+        Mix_VolumeMusic(self.RAMP[model.system_options.music_volume])
+        if model.system_options.music != "":
+            self.play_music(model.system_options.music)
         else:
             self.stop_music()
 
-        for effect in model.sound_effects:
-            self.play_effect(effect)
+        for effect in model.system_options.sound_effects:
+            self.play_effect(model, effect)
 
-        model = model.set(sound_effects=[])
+        model = model.set(system_options=model.system_options.set(sound_effects=[]))
 
         return model
 
@@ -1388,12 +1392,12 @@ def run(title, width, height, model, delay_per_frame):
                 elif window_event.event == SDL_WINDOWEVENT_CLOSE:
                     model = model.on_window_close()
 
-            if model.should_close:
+            if model.system_options.should_close:
                 break
 
             model = audio.process(model)
 
-        if model.should_close:
+        if model.system_options.should_close:
             break
 
         controls = api.Controls(
@@ -1406,7 +1410,7 @@ def run(title, width, height, model, delay_per_frame):
         model = model.on_update(controls)
         model = audio.process(model)
 
-        if model.should_close:
+        if model.system_options.should_close:
             break
 
         renderer.clear()

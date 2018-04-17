@@ -363,13 +363,42 @@ class MouseButton(enum.IntEnum):
     UNKNOWN = 6
 
 
-TRACE_UNHANDLED_EVENTS = True
+# TRACE_UNHANDLED_EVENTS = True
+TRACE_UNHANDLED_EVENTS = False
+
+
+class SystemOptions(PClass):
+    should_close = field(type=bool, mandatory=True)
+    music = field(type=str, mandatory=True)
+    sound_effects = field(type=list, mandatory=True)
+    music_volume = field(type=int, mandatory=True)
+    effects_volume = field(type=int, mandatory=True)
 
 
 class Model(PClass):
-    should_close = field(type=bool, mandatory=True, initial=False)
-    music = field(type=str, mandatory=True, initial="")
-    sound_effects = field(type=list, mandatory=True, initial=[])
+
+    system_options = field(
+        type=SystemOptions,
+        mandatory=True,
+        initial=SystemOptions(
+            should_close=False,
+            music="",
+            sound_effects=[],
+            music_volume=3,
+            effects_volume=2
+        )
+    )
+
+    def play_sound(self, filename):
+        effects = self.system_options.sound_effects
+        effects.append(filename)
+        return self.set_system_options(sound_effects=effects)
+
+    def switch_screen(self, new_screen):
+        return new_screen.set(system_options=self.system_options)
+
+    def set_system_options(self, **kwargs):
+        return self.set(system_options=self.system_options.set(**kwargs))
 
     def draw(self, renderer):
         pass
@@ -447,7 +476,7 @@ class Model(PClass):
     def on_quit(self):
         if TRACE_UNHANDLED_EVENTS:
             print('on_quit')
-        return self.set(should_close=True)
+        return self.set_system_options(should_close=True)
 
     def on_text_input(self, text):
         if TRACE_UNHANDLED_EVENTS:
@@ -517,4 +546,4 @@ class Model(PClass):
     def on_window_close(self):
         if TRACE_UNHANDLED_EVENTS:
             print('on_window_close')
-        return self.set(should_close=True)
+        return self.set_system_options(should_close=True)

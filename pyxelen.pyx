@@ -502,6 +502,7 @@ cdef extern from "SDL.h":
     int SDL_Init(uint32_t flags)
     void SDL_Quit()
     void SDL_Delay(uint32_t milliseconds)
+    uint32_t SDL_GetTicks()
 
     # Events
     int SDL_PollEvent(SDL_Event *event)
@@ -928,15 +929,18 @@ class Audio:
 
 class KeyModifiers:
 
-    def __init__(self, ctrl, shift, alt):
+    def __init__(self, *, ctrl, shift, alt):
         self.ctrl = ctrl
         self.shift = shift
         self.alt = alt
 
+    def __repr__(self):
+        return f'KeyModifiers(ctrl={self.ctrl}, shift={self.shift}, alt={self.alt}'
+
 
 class Mouse:
 
-    def __init__(self, x, y, left, middle, right, button4, button5):
+    def __init__(self, *, x, y, left, middle, right, button4, button5):
         self.x = x
         self.y = y
         self.left = left
@@ -945,14 +949,14 @@ class Mouse:
         self.button4 = button4
         self.button5 = button5
 
+    def __repr__(self):
+        return f'Mouse(x={self.x}, y={self.y}, left={self.left}, middle={self.middle}, right={self.right}, button4={self.button4}, button5={self.button5})'
+
 
 class Controls:
 
     def __init__(self):
         self._controllers = [None for _ in range(16)]
-
-    def __repr__(self):
-        return repr(self._controllers)
 
     def find_controller(self, int instance):
         for i, c in enumerate(self._controllers):
@@ -1019,6 +1023,13 @@ cdef class Window:
     def window_id(self):
         return SDL_GetWindowID(self.window)
 
+    @property
+    def size(self):
+        cdef int w
+        cdef int h
+        SDL_GetWindowSize(self.window, &w, &h)
+        return w, h
+
 
 cdef class Surface:
 
@@ -1034,6 +1045,15 @@ cdef class Texture:
 
     def __dealloc__(self):
         SDL_DestroyTexture(self.texture)
+
+    @property
+    def size(self):
+        cdef uint32_t pixel_format
+        cdef int access
+        cdef int w
+        cdef int h
+        SDL_QueryTexture(self.texture, &pixel_format, &access, &w, &h)
+        return w, h
 
 
 cdef class Renderer:
@@ -1069,13 +1089,32 @@ cdef class Renderer:
         return result
 
     @property
-    def color(self):
-        raise NotImplemented('TODO')
+    def draw_color(self):
+        raise NotImplemented()
 
-    @color.setter
-    def color(self, color):
+    @draw_color.setter
+    def draw_color(self, color):
         r, g, b, a = color
         SDL_SetRenderDrawColor(self.renderer, r, g, b, a)
+
+    def copy(self,
+             Texture texture,
+             int src_x, int src_y, int src_w, int src_h,
+             int dst_x, int dst_y, int dst_w, int dst_h):
+        cdef SDL_Rect src = SDL_Rect(src_x, src_y, src_w, src_h)
+        cdef SDL_Rect dst = SDL_Rect(dst_x, dst_y, dst_w, dst_h)
+        SDL_RenderCopy(self.renderer, texture.texture, &src, &dst)
+
+    @property
+    def target(self):
+        raise NotImplemented()
+
+    @target.setter
+    def target(self, Texture target):
+        if target is None:
+            SDL_SetRenderTarget(self.renderer, NULL)
+        else:
+            SDL_SetRenderTarget(self.renderer, target.texture)
 
     def clear(self):
         SDL_RenderClear(self.renderer)
@@ -1083,17 +1122,8 @@ cdef class Renderer:
     def present(self):
         SDL_RenderPresent(self.renderer)
 
-class EventHandler:
-
-    TRACE_UNHANDLED_EVENTS = False
-
 
 class Pyxelen:
-
-    EventHandler = EventHandler
-    MouseButton = MouseButton
-    Key = Key
-    ControllerButton = ControllerButton
 
     def __init__(self):
         self.audio = Audio()
@@ -1120,8 +1150,12 @@ class Pyxelen:
             if w.window_id == window_id
         ][0]
 
-    def run(self, event_handler, ticks_per_frame):
+    def run(self, event_handler, fps):
         cdef SDL_Event event
+        assert fps > 0, 'fps must be positive'
+        cdef uint32_t ticks_per_frame = int(1000 / fps)
+        cdef uint32_t current_ticks = SDL_GetTicks()
+        cdef uint32_t last_frame_ticks = SDL_GetTicks()
 
         while len(self._windows) > 0:
 
@@ -1353,26 +1387,25 @@ class Pyxelen:
 
             event_handler.on_update_and_render()
 
-            # TODO: Calculate how long it's been and wait for the remainder
-            SDL_Delay(ticks_per_frame)
+            current_ticks = SDL_GetTicks()
+            if current_ticks < last_frame_ticks + ticks_per_frame:
+                SDL_Delay(last_frame_ticks + ticks_per_frame - current_ticks)
+            last_frame_ticks = SDL_GetTicks()
 
 
-try:
+def get_error():
+    return SDL_GetError().decode('utf-8')
+
+
+def init():
     assert SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) == 0
     assert IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) == (IMG_INIT_JPG | IMG_INIT_PNG)
     assert Mix_Init(MIX_INIT_OGG) == MIX_INIT_OGG
     assert Mix_OpenAudio(MIX_DEFAULT_FREQUENCY * 2, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) >= 0
-except AssertionError as e:
-    raise AssertionError(SDL_GetError().decode('utf-8')) from e
 
 
-
-try:
-    main = importlib.import_module(sys.argv[1][:-3])
-    main.main(Pyxelen())
-finally:
+def quit():
     Mix_Quit()
     IMG_Quit()
     SDL_Quit()
     Mix_CloseAudio()
-

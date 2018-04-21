@@ -902,10 +902,13 @@ class Audio:
     def __init__(self):
         self.music_playing = False
 
-    def play_music(self, Music music, int volume):
-        self.stop_music()
+    def set_music_volume(self, int volume):
         Mix_VolumeMusic(volume)
+
+    def play_music(self, Music music):
+        self.stop_music()
         Mix_PlayMusic(music.music, -1)
+        self.music_playing = True
 
     def stop_music(self):
         if self.music_playing:
@@ -929,18 +932,15 @@ class Audio:
 
 class KeyModifiers:
 
-    def __init__(self, *, ctrl, shift, alt):
+    def __init__(self, ctrl, shift, alt):
         self.ctrl = ctrl
         self.shift = shift
         self.alt = alt
 
-    def __repr__(self):
-        return f'KeyModifiers(ctrl={self.ctrl}, shift={self.shift}, alt={self.alt}'
-
 
 class Mouse:
 
-    def __init__(self, *, x, y, left, middle, right, button4, button5):
+    def __init__(self, x, y, left, middle, right, button4, button5):
         self.x = x
         self.y = y
         self.left = left
@@ -948,9 +948,6 @@ class Mouse:
         self.right = right
         self.button4 = button4
         self.button5 = button5
-
-    def __repr__(self):
-        return f'Mouse(x={self.x}, y={self.y}, left={self.left}, middle={self.middle}, right={self.right}, button4={self.button4}, button5={self.button5})'
 
 
 class Controls:
@@ -1405,7 +1402,7 @@ def init():
 
 
 def quit():
+    Mix_CloseAudio()
     Mix_Quit()
     IMG_Quit()
     SDL_Quit()
-    Mix_CloseAudio()
